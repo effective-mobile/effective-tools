@@ -4,6 +4,7 @@ import { Application } from './deps.ts';
 import { serverRouters } from './modules.ts';
 
 // Использован такой подход, так как важен порядок импортов
+await import('./common/error.handler.ts');
 await import('./common/logger.handler.ts');
 await import('./common/timing.handler.ts');
 await import('./common/response.handler.ts');
