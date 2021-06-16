@@ -10,4 +10,4 @@ router
     context.response.body = body;
   });
 
-serverRouters.push(router);
+serverRouters.pushRouter(router);

@@ -20,4 +20,4 @@ router
     }
   });
 
-serverRouters.push(router);
+serverRouters.pushRouter(router);

@@ -1,53 +1,30 @@
 #!/usr/bin/env -S deno run --allow-read=../.. --allow-write=../.. --allow-run --unstable --allow-net
 
-import './configs/handler.ts';
-import { Result } from './core.ts';
 import { Application } from './deps.ts';
-import './echo/handler.ts';
 import { serverRouters } from './modules.ts';
 
-import './version/handler.ts';
+// Использован такой подход, так как важен порядок импортов
+await import('./common/logger.handler.ts');
+await import('./common/timing.handler.ts');
+await import('./common/response.handler.ts');
+// обычные роутеры
+await import('./configs/handler.ts');
+await import('./echo/handler.ts');
+await import('./version/handler.ts');
+// замыкающие
+await import('./common/notFound.handler.ts');
 
 const app = new Application();
 
-// Result converter
-app.use(async (ctx, next) => {
-  await next();
-  const result = ctx.response.body;
-  // console.log('result', result)
-  if (result instanceof Result) {
-    const { status, body } = result.response;
-    if (status !== undefined) {
-      ctx.response.status = status;
-    }
-    ctx.response.body = body;
+serverRouters.items.forEach(item => {
+  const { router, middleware } = item;
+  if (router) {
+    app.use(router.routes());
+    app.use(router.allowedMethods());
   }
-});
-
-// Logger
-app.use(async (ctx, next) => {
-  await next();
-  const rt = ctx.response.headers.get('X-Response-Time');
-  console.log(`${ctx.request.method} ${ctx.request.url} - ${rt}`);
-});
-
-// Timing
-app.use(async (ctx, next) => {
-  const start = Date.now();
-  await next();
-  const ms = Date.now() - start;
-  ctx.response.headers.set('X-Response-Time', `${ms}ms`);
-});
-
-/*
-app.use((ctx) => {
-  ctx.response.body = 'Hello World!';
-});
-*/
-
-serverRouters.forEach(router => {
-  app.use(router.routes());
-  app.use(router.allowedMethods());
+  if (middleware) {
+    app.use(middleware);
+  }
 });
 
 const controller = new AbortController();
@@ -61,5 +38,5 @@ function printInfo() {
   console.log('Start server');
   console.log(`Deno: ${deno}`);
   console.log(`V8: ${v8}`);
-  console.log(`TypeCcript: ${typescript}`);
+  console.log(`TypeScript: ${typescript}`);
 }

@@ -7,4 +7,4 @@ router
     context.response.body = Deno.version;
   });
 
-serverRouters.push(router);
+serverRouters.pushRouter(router);
